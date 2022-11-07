@@ -12,12 +12,10 @@ pub fn main() anyerror!void {
     var args = std.process.args();
     _ = args.skip();
     const source_path = args.next() orelse return error.MissingSourcePathArg;
-    std.debug.print("source path: {s}\n", .{source_path});
     const f = try std.fs.cwd().openFile(source_path, .{});
     defer f.close();
 
-    const src = try f.readToEndAlloc(alloc, 2048);
-    std.debug.print("{s}", .{src});
+    const src = try f.readToEndAlloc(alloc, 1024 * 20);
 
     var stdin = std.io.getStdIn();
     var stdout = std.io.getStdOut();
