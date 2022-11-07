@@ -1,7 +1,7 @@
 const std = @import("std");
 const ArrayList = std.ArrayList;
 
-const MEMORY_SIZE = 10; //30000;
+const MEMORY_SIZE = 30000;
 
 pub fn main() anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
@@ -22,6 +22,9 @@ pub fn main() anyerror!void {
 }
 
 fn interpret(src: []const u8) !void {
+    const stdin = std.io.getStdIn();
+    const stdout = std.io.getStdOut();
+
     var memory = [_]u8{0} ** MEMORY_SIZE;
 
     var pc: usize = 0;
@@ -35,9 +38,56 @@ fn interpret(src: []const u8) !void {
             '<' => dataptr -= 1,
             '+' => memory[dataptr] += 1,
             '-' => memory[dataptr] -= 1,
+            ',' => memory[dataptr] = try stdin.reader().readByte(),
+            '.' => try stdout.writer().writeByte(memory[dataptr]),
+            // jumps to next matching ']' if curr_data == 0
+            '[' => blk: {
+                if (memory[dataptr] != 0) {
+                    break :blk;
+                }
+
+                var bracket_nesting: usize = 1;
+                var saved_pc = pc; // used for error message only
+
+                while (bracket_nesting != 0 and pc < src.len - 1) {
+                    pc += 1;
+
+                    if (src[pc] == ']') {
+                        bracket_nesting -= 1;
+                    } else if (src[pc] == '[') {
+                        bracket_nesting += 1;
+                    }
+                }
+
+                if (bracket_nesting != 0) {
+                    std.debug.print("unmatched '[' at pc={}", .{saved_pc});
+                }
+            },
+            // jumps to previous matching ']' if curr data != 0
+            ']' => blk: {
+                if (memory[dataptr] == 0) {
+                    break :blk;
+                }
+
+                var bracket_nesting: usize = 1;
+                var saved_pc = pc; // used for error message only
+
+                while (bracket_nesting != 0 and pc > 0) {
+                    pc -= 1;
+
+                    if (src[pc] == '[') {
+                        bracket_nesting -= 1;
+                    } else if (src[pc] == ']') {
+                        bracket_nesting += 1;
+                    }
+                }
+
+                if (bracket_nesting != 0) {
+                    std.debug.print("unmatched ']' at pc={}", .{saved_pc});
+                }
+            },
             else => {},
         }
-        std.debug.print("{any}\n", .{memory});
 
         pc += 1;
     }
