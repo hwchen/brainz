@@ -21,15 +21,30 @@ pub fn main() anyerror!void {
     var stdout = std.io.getStdOut();
     var memory = [_]u8{0} ** MEMORY_SIZE;
 
-    try interpret(src, &memory, stdin.reader(), stdout.writer());
+    const program = try parse(src, alloc);
+    defer program.deinit();
+    try interpret(program, &memory, stdin.reader(), stdout.writer());
 }
 
-fn interpret(src: []const u8, memory: []u8, rdr: anytype, wtr: anytype) !void {
+fn parse(src: []const u8, alloc: std.mem.Allocator) !Program {
+    var instructions = ArrayList(u8).init(alloc);
+
+    for (src) |c| {
+        switch (c) {
+            '>', '<', '+', '-', '.', ',', '[', ']' => try instructions.append(c),
+            else => {},
+        }
+    }
+    return .{ .instructions = instructions.toOwnedSlice(), .alloc = alloc };
+}
+
+fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype) !void {
     var pc: usize = 0;
     var dataptr: usize = 0;
 
-    while (pc < src.len) {
-        const instruction = src[pc];
+    while (pc < program.instructions.len) {
+        const instructions = program.instructions;
+        const instruction = instructions[pc];
 
         switch (instruction) {
             '>' => dataptr += 1,
@@ -47,12 +62,12 @@ fn interpret(src: []const u8, memory: []u8, rdr: anytype, wtr: anytype) !void {
                 var bracket_nesting: usize = 1;
                 var saved_pc = pc; // used for error message only
 
-                while (bracket_nesting != 0 and pc < src.len - 1) {
+                while (bracket_nesting != 0 and pc < instructions.len - 1) {
                     pc += 1;
 
-                    if (src[pc] == ']') {
+                    if (instructions[pc] == ']') {
                         bracket_nesting -= 1;
-                    } else if (src[pc] == '[') {
+                    } else if (instructions[pc] == '[') {
                         bracket_nesting += 1;
                     }
                 }
@@ -73,9 +88,9 @@ fn interpret(src: []const u8, memory: []u8, rdr: anytype, wtr: anytype) !void {
                 while (bracket_nesting != 0 and pc > 0) {
                     pc -= 1;
 
-                    if (src[pc] == '[') {
+                    if (instructions[pc] == '[') {
                         bracket_nesting -= 1;
-                    } else if (src[pc] == ']') {
+                    } else if (instructions[pc] == ']') {
                         bracket_nesting += 1;
                     }
                 }
@@ -84,12 +99,23 @@ fn interpret(src: []const u8, memory: []u8, rdr: anytype, wtr: anytype) !void {
                     std.debug.print("unmatched ']' at pc={}", .{saved_pc});
                 }
             },
-            else => {},
+            else => {
+                return error.unreachableChar;
+            },
         }
 
         pc += 1;
     }
 }
+
+const Program = struct {
+    alloc: std.mem.Allocator,
+    instructions: []const u8,
+
+    fn deinit(self: Program) void {
+        self.alloc.free(self.instructions);
+    }
+};
 
 test "hello world" {
     const hello_world = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
@@ -104,6 +130,8 @@ test "hello world" {
     var rdr = empty_in.reader();
     var wtr = list.writer();
 
-    try interpret(hello_world, &memory, rdr, wtr);
+    const program = try parse(hello_world, std.testing.allocator);
+    defer program.deinit();
+    try interpret(program, &memory, rdr, wtr);
     try expectEqualSlices(u8, "Hello World!\n", list.items);
 }
