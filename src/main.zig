@@ -117,7 +117,9 @@ const Program = struct {
     }
 };
 
-test "hello world" {
+test "interpret hello world" {
+    // Doesn't test parsing stage (so this input cannot have comments)
+
     const hello_world = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
 
     var list = ArrayList(u8).init(std.testing.allocator);
@@ -130,8 +132,7 @@ test "hello world" {
     var rdr = empty_in.reader();
     var wtr = list.writer();
 
-    const program = try parse(hello_world, std.testing.allocator);
-    defer program.deinit();
+    const program = Program{ .instructions = hello_world, .alloc = std.testing.allocator };
     try interpret(program, &memory, rdr, wtr);
     try expectEqualSlices(u8, "Hello World!\n", list.items);
 }
