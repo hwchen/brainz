@@ -27,7 +27,7 @@ pub fn runInterpreter(interpret: anytype) anyerror!void {
     const program = try parse(src, alloc);
     defer program.deinit();
 
-    try interpret(program, &memory, stdin.reader(), stdout.writer());
+    try interpret(program, &memory, stdin.reader(), stdout.writer(), alloc);
 }
 
 fn parse(src: []const u8, alloc: std.mem.Allocator) !Program {
@@ -68,6 +68,6 @@ pub fn testHelloWorld(interpret: anytype) anyerror!void {
     var wtr = list.writer();
 
     const program = Program{ .instructions = hello_world, .alloc = std.testing.allocator };
-    try interpret(program, &memory, rdr, wtr);
+    try interpret(program, &memory, rdr, wtr, std.testing.allocator);
     try expectEqualSlices(u8, "Hello World!\n", list.items);
 }

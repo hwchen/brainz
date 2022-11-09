@@ -10,12 +10,14 @@ test "og: interpret hello world" {
     try common.testHelloWorld(interpret);
 }
 
-fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype) !void {
+fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: std.mem.Allocator) !void {
+    _ = alloc;
+
+    const instructions = program.instructions;
     var pc: usize = 0;
     var dataptr: usize = 0;
 
-    while (pc < program.instructions.len) {
-        const instructions = program.instructions;
+    while (pc < instructions.len) {
         const instruction = instructions[pc];
 
         switch (instruction) {
