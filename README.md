@@ -17,7 +17,7 @@ stages:
 zig build <stage> -Drelease-fast -- <bf-source-file>
 ```
 
-There's also a flag to enable tracing `-Dtrace`, and some fixtures to try in `./fixtures`. So one example run would be:
+There's also a flag to enable tracing of instructions `-Dtrace`, and some fixtures to try in `./fixtures`. So one example run would be:
 
 ```
 zig build opt1 -Drelease-fast -Dtrace -- fixtures/mandelbrot.bf
