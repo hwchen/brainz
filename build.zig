@@ -11,6 +11,11 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
+    // Build option for tracing instructions
+    const trace_value = b.option(bool, "trace", "enable tracing instructions for interpreter") orelse false;
+    const trace_step = b.addOptions();
+    trace_step.addOption(bool, "TRACE", trace_value);
+
     const stages = [_][]const u8{
         "og",
         "opt1",
@@ -22,6 +27,7 @@ pub fn build(b: *std.build.Builder) void {
         const exe = b.addExecutable(stage, "src/" ++ stage ++ ".zig");
         exe.setTarget(target);
         exe.setBuildMode(mode);
+        exe.addOptions("build_with_trace", trace_step);
         exe.install();
 
         const run_cmd = exe.run();

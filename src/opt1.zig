@@ -7,7 +7,13 @@ const ArrayList = std.ArrayList;
 const Program = common.Program;
 const JumpTable = ArrayList(usize);
 
+const trace = @import("build_with_trace");
+
 pub fn main() anyerror!void {
+    if (trace.TRACE) {
+        std.debug.print("Building with TRACE enabled\n", .{});
+    }
+
     try common.runInterpreter(interpret);
 }
 
