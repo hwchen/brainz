@@ -33,7 +33,7 @@ test "og: interpret hello world" {
 }
 
 fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: Allocator) !void {
-    var instruction_count = if (TRACE) std.AutoHashMap(u8, usize).init(alloc) orelse undefined;
+    var instruction_count = if (TRACE) std.AutoHashMap(u8, usize).init(alloc) else undefined;
     if (TRACE) {
         defer instruction_count.deinit();
     }
