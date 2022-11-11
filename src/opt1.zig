@@ -12,16 +12,6 @@ const TRACE = @import("build_with_trace").TRACE;
 
 pub fn main() anyerror!void {
     if (TRACE) {
-        // this branch be automatically eliminated if trace.TRACE is false.
-        //
-        // A comment on discord:
-        // https://discord.com/channels/605571803288698900/605572581046747136/950032936399429662
-        //
-        //  there is also aggressive dead-code elimination on comptime-chosen paths.
-        //  That is to say, if the condition of an if statement/expression is known at
-        //  comptime (even if the resulting expression is a runtime one), the code of
-        //  the expression on false will be eliminated, and the contents of the
-        //  expression of the else clause will be eliminated on true.
         std.debug.print("Building with TRACE enabled\n", .{});
     }
 
