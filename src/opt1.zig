@@ -53,7 +53,7 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
             if (entry.found_existing) {
                 entry.value_ptr.* += 1;
             } else {
-                entry.value_ptr.* = 0;
+                entry.value_ptr.* = 1;
             }
         }
 
