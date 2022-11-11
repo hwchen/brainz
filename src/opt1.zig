@@ -7,10 +7,21 @@ const ArrayList = std.ArrayList;
 const Program = common.Program;
 const JumpTable = ArrayList(usize);
 
-const trace = @import("build_with_trace");
+// comptime known, from build option -Dtrace
+const TRACE = @import("build_with_trace").TRACE;
 
 pub fn main() anyerror!void {
-    if (trace.TRACE) {
+    if (TRACE) {
+        // this branch be automatically eliminated if trace.TRACE is false.
+        //
+        // A comment on discord:
+        // https://discord.com/channels/605571803288698900/605572581046747136/950032936399429662
+        //
+        //  there is also aggressive dead-code elimination on comptime-chosen paths.
+        //  That is to say, if the condition of an if statement/expression is known at
+        //  comptime (even if the resulting expression is a runtime one), the code of
+        //  the expression on false will be eliminated, and the contents of the
+        //  expression of the else clause will be eliminated on true.
         std.debug.print("Building with TRACE enabled\n", .{});
     }
 
@@ -22,6 +33,11 @@ test "og: interpret hello world" {
 }
 
 fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: Allocator) !void {
+    var instruction_count = if (TRACE) std.AutoHashMap(u8, usize).init(alloc) orelse undefined;
+    if (TRACE) {
+        defer instruction_count.deinit();
+    }
+
     const jumptable = try computeJumptable(program, alloc);
     defer jumptable.deinit();
 
@@ -31,6 +47,15 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
 
     while (pc < instructions.len) {
         const instruction = instructions[pc];
+
+        if (TRACE) {
+            var entry = try instruction_count.getOrPut(instruction);
+            if (entry.found_existing) {
+                entry.value_ptr.* += 1;
+            } else {
+                entry.value_ptr.* = 0;
+            }
+        }
 
         switch (instruction) {
             '>' => dataptr += 1,
@@ -53,6 +78,13 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
         }
 
         pc += 1;
+    }
+
+    if (TRACE) {
+        var kv = instruction_count.iterator();
+        while (kv.next()) |entry| {
+            std.debug.print("{c}: {d}\n", .{ entry.key_ptr.*, entry.value_ptr.* });
+        }
     }
 }
 
