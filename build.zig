@@ -19,6 +19,7 @@ pub fn build(b: *std.build.Builder) void {
     const stages = [_][]const u8{
         "og",
         "opt1",
+        "opt2",
     };
 
     const test_step = b.step("test", "Run unit tests");

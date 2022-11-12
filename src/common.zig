@@ -70,5 +70,6 @@ pub fn testHelloWorld(parse: anytype, interpret: anytype) anyerror!void {
     defer program.deinit();
 
     try interpret(program, &memory, rdr, wtr, std.testing.allocator);
+    std.debug.print("{s}", .{list.items});
     try expectEqualSlices(u8, "Hello World!\n", list.items);
 }
