@@ -215,7 +215,7 @@ test "opt2: parse basic 1" {
     // checking for missing `-`
     // Also for `[` not at beginning, and `]` at end
 
-    const src = ">[<<--]";
+    const src = ">[--]";
     const program = try parse(src, std.testing.allocator);
     defer program.deinit();
     try std.testing.expectEqualSlices(
@@ -264,8 +264,18 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
             .dec_ptr => dataptr -= op.value,
             .inc_data => memory[dataptr] += @intCast(u8, op.value),
             .dec_data => memory[dataptr] -= @intCast(u8, op.value),
-            .read_stdin => memory[dataptr] = try rdr.readByte(),
-            .write_stdout => try wtr.writeByte(memory[dataptr]),
+            .read_stdin => {
+                var i: usize = 0;
+                while (i < op.value) : (i += 1) {
+                    memory[dataptr] = try rdr.readByte();
+                }
+            },
+            .write_stdout => {
+                var i: usize = 0;
+                while (i < op.value) : (i += 1) {
+                    try wtr.writeByte(memory[dataptr]);
+                }
+            },
             // jumps to next matching ']' if curr_data == 0
             .jump_if_data_zero => if (memory[dataptr] == 0) {
                 pc = op.value;
