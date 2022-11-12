@@ -42,6 +42,7 @@ pub fn build(b: *std.build.Builder) void {
         const exe_tests = b.addTest("src/" ++ stage ++ ".zig");
         exe_tests.setTarget(target);
         exe_tests.setBuildMode(mode);
+        exe_tests.addOptions("build_with_trace", trace_step);
         test_step.dependOn(&exe_tests.step);
     }
 }
