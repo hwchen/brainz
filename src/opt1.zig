@@ -15,15 +15,14 @@ pub fn main() anyerror!void {
         std.debug.print("Building with TRACE enabled\n", .{});
     }
 
-    try common.runInterpreter(interpret);
+    try common.runInterpreter(common.parseProgram, interpret);
 }
 
 test "og: interpret hello world" {
-    try common.testHelloWorld(interpret);
+    try common.testHelloWorld(common.parseProgram, interpret);
 }
 
 fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: Allocator) !void {
-    var instruction_count = if (TRACE) std.AutoHashMap(u8, usize).init(alloc) else undefined;
     comptime var instruction_count = if (TRACE) std.AutoHashMap(u8, usize).init(alloc) else undefined;
     if (TRACE) {
         defer instruction_count.deinit();

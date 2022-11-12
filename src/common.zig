@@ -7,7 +7,7 @@ const ArrayList = std.ArrayList;
 
 const MEMORY_SIZE = 30000;
 
-pub fn runInterpreter(interpret: anytype) anyerror!void {
+pub fn runInterpreter(parse: anytype, interpret: anytype) anyerror!void {
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
     defer arena.deinit();
     const alloc = arena.allocator();
@@ -30,7 +30,7 @@ pub fn runInterpreter(interpret: anytype) anyerror!void {
     try interpret(program, &memory, stdin.reader(), stdout.writer(), alloc);
 }
 
-fn parse(src: []const u8, alloc: std.mem.Allocator) !Program {
+pub fn parseProgram(src: []const u8, alloc: std.mem.Allocator) !Program {
     var instructions = ArrayList(u8).init(alloc);
 
     for (src) |c| {
@@ -51,10 +51,9 @@ pub const Program = struct {
     }
 };
 
-pub fn testHelloWorld(interpret: anytype) anyerror!void {
+pub fn testHelloWorld(parse: anytype, interpret: anytype) anyerror!void {
     const expectEqualSlices = std.testing.expectEqualSlices;
 
-    // Doesn't test parsing stage (so this input cannot have comments)
     const hello_world = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
 
     var list = ArrayList(u8).init(std.testing.allocator);
@@ -67,7 +66,9 @@ pub fn testHelloWorld(interpret: anytype) anyerror!void {
     var rdr = empty_in.reader();
     var wtr = list.writer();
 
-    const program = Program{ .instructions = hello_world, .alloc = std.testing.allocator };
+    const program = try parse(hello_world, std.testing.allocator);
+    defer program.deinit();
+
     try interpret(program, &memory, rdr, wtr, std.testing.allocator);
     try expectEqualSlices(u8, "Hello World!\n", list.items);
 }

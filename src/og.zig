@@ -3,11 +3,11 @@ const common = @import("common.zig");
 const Program = common.Program;
 
 pub fn main() anyerror!void {
-    try common.runInterpreter(interpret);
+    try common.runInterpreter(common.parseProgram, interpret);
 }
 
 test "og: interpret hello world" {
-    try common.testHelloWorld(interpret);
+    try common.testHelloWorld(common.parseProgram, interpret);
 }
 
 fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: std.mem.Allocator) !void {
