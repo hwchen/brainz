@@ -242,7 +242,7 @@ test "opt2: parse basic 1" {
 }
 
 fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: Allocator) !void {
-    var instruction_count = if (TRACE) std.AutoHashMap(Op.Tag, usize).init(alloc) else undefined;
+    var instruction_count = if (TRACE) std.AutoHashMap(Op.Tag, usize).init(alloc);
     if (TRACE) {
         defer instruction_count.deinit();
     }
