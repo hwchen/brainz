@@ -7,8 +7,9 @@ const ArrayList = std.ArrayList;
 const Program = common.Program;
 const JumpTable = ArrayList(usize);
 
-// comptime known, from build option -Dtrace
-const TRACE = @import("build_with_trace").TRACE;
+// comptime known build option, -Dtrace and -Ddebug-opts
+const build_options = @import("build_options");
+const TRACE = build_options.TRACE;
 
 pub fn main() anyerror!void {
     if (TRACE) {
@@ -23,7 +24,7 @@ test "og: interpret hello world" {
 }
 
 fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: Allocator) !void {
-    comptime var instruction_count = if (TRACE) std.AutoHashMap(u8, usize).init(alloc) else undefined;
+    var instruction_count = if (TRACE) std.AutoHashMap(u8, usize).init(alloc) else undefined;
     if (TRACE) {
         defer instruction_count.deinit();
     }
@@ -72,6 +73,7 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
 
     if (TRACE) {
         var kv = instruction_count.iterator();
+        std.debug.print("\n# Instruction Count\n", .{});
         while (kv.next()) |entry| {
             std.debug.print("{c}: {d}\n", .{ entry.key_ptr.*, entry.value_ptr.* });
         }

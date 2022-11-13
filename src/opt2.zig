@@ -6,8 +6,10 @@ const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
 const JumpTable = ArrayList(usize);
 
-// comptime known, from build option -Dtrace
-const TRACE = @import("build_with_trace").TRACE;
+// comptime known build option, -Dtrace and -Ddebug-opts
+const build_options = @import("build_options");
+const TRACE = build_options.TRACE;
+const DEBUG_OPS = build_options.DEBUG_OPS;
 
 pub fn main() anyerror!void {
     if (TRACE) {
@@ -71,8 +73,8 @@ const Op = struct {
     };
 };
 
-fn ops_debug(ops: []const Op) void {
-    std.debug.print("\n", .{});
+fn opsDebug(ops: []const Op) void {
+    std.debug.print("\n# Ops\n", .{});
     for (ops) |item, idx| {
         std.debug.print("{d:0>2}: {any} {d}\n", .{ idx, item.tag, item.value });
     }
@@ -165,7 +167,9 @@ fn parse(src: []const u8, alloc: Allocator) !Program {
         });
     }
 
-    ops_debug(ops.items);
+    if (DEBUG_OPS) {
+        opsDebug(ops.items);
+    }
 
     return .{ .ops = ops.toOwnedSlice(), .alloc = alloc };
 }
@@ -238,7 +242,7 @@ test "opt2: parse basic 1" {
 }
 
 fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: Allocator) !void {
-    comptime var instruction_count = if (TRACE) std.AutoHashMap(Op.OpKind, usize).init(alloc) else undefined;
+    var instruction_count = if (TRACE) std.AutoHashMap(Op.Tag, usize).init(alloc) else undefined;
     if (TRACE) {
         defer instruction_count.deinit();
     }
@@ -251,7 +255,7 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
         const op = ops[pc];
 
         if (TRACE) {
-            var entry = try instruction_count.getOrPut(op);
+            var entry = try instruction_count.getOrPut(op.tag);
             if (entry.found_existing) {
                 entry.value_ptr.* += 1;
             } else {
@@ -294,6 +298,7 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
 
     if (TRACE) {
         var kv = instruction_count.iterator();
+        std.debug.print("\n# Ops Count\n", .{});
         while (kv.next()) |entry| {
             std.debug.print("{c}: {d}\n", .{ entry.key_ptr.*, entry.value_ptr.* });
         }

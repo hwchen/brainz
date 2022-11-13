@@ -11,10 +11,14 @@ pub fn build(b: *std.build.Builder) void {
     // between Debug, ReleaseSafe, ReleaseFast, and ReleaseSmall.
     const mode = b.standardReleaseOptions();
 
-    // Build option for tracing instructions
+    // Build options
+    const build_options_step = b.addOptions();
+
     const trace_value = b.option(bool, "trace", "enable tracing instructions for interpreter") orelse false;
-    const trace_step = b.addOptions();
-    trace_step.addOption(bool, "TRACE", trace_value);
+    build_options_step.addOption(bool, "TRACE", trace_value);
+
+    const debug_ops_value = b.option(bool, "debug-ops", "enable debug output for ops") orelse false;
+    build_options_step.addOption(bool, "DEBUG_OPS", debug_ops_value);
 
     const stages = [_][]const u8{
         "og",
@@ -28,7 +32,7 @@ pub fn build(b: *std.build.Builder) void {
         const exe = b.addExecutable(stage, "src/" ++ stage ++ ".zig");
         exe.setTarget(target);
         exe.setBuildMode(mode);
-        exe.addOptions("build_with_trace", trace_step);
+        exe.addOptions("build_options", build_options_step);
         exe.install();
 
         const run_cmd = exe.run();
@@ -43,7 +47,7 @@ pub fn build(b: *std.build.Builder) void {
         const exe_tests = b.addTest("src/" ++ stage ++ ".zig");
         exe_tests.setTarget(target);
         exe_tests.setBuildMode(mode);
-        exe_tests.addOptions("build_with_trace", trace_step);
+        exe_tests.addOptions("build_options", build_options_step);
         test_step.dependOn(&exe_tests.step);
     }
 }
