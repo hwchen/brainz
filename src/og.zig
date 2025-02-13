@@ -34,7 +34,7 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
                 }
 
                 var bracket_nesting: usize = 1;
-                var saved_pc = pc; // used for error message only
+                const saved_pc = pc; // used for error message only
 
                 while (bracket_nesting != 0 and pc < instructions.len - 1) {
                     pc += 1;
@@ -57,7 +57,7 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
                 }
 
                 var bracket_nesting: usize = 1;
-                var saved_pc = pc; // used for error message only
+                const saved_pc = pc; // used for error message only
 
                 while (bracket_nesting != 0 and pc > 0) {
                     pc -= 1;

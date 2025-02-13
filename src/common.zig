@@ -39,7 +39,7 @@ pub fn parseProgram(src: []const u8, alloc: std.mem.Allocator) !Program {
             else => {},
         }
     }
-    return .{ .instructions = instructions.toOwnedSlice(), .alloc = alloc };
+    return .{ .instructions = try instructions.toOwnedSlice(), .alloc = alloc };
 }
 
 pub const Program = struct {
@@ -63,8 +63,8 @@ pub fn testHelloWorld(parse: anytype, interpret: anytype) anyerror!void {
     var empty_in = std.io.fixedBufferStream(&in_buf);
 
     var memory = [_]u8{0} ** 30000;
-    var rdr = empty_in.reader();
-    var wtr = list.writer();
+    const rdr = empty_in.reader();
+    const wtr = list.writer();
 
     const program = try parse(hello_world, std.testing.allocator);
     defer program.deinit();

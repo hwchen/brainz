@@ -40,7 +40,7 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
         const instruction = instructions[pc];
 
         if (TRACE) {
-            var entry = try instruction_count.getOrPut(instruction);
+            const entry = try instruction_count.getOrPut(instruction);
             if (entry.found_existing) {
                 entry.value_ptr.* += 1;
             } else {

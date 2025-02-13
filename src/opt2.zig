@@ -75,7 +75,7 @@ const Op = struct {
 
 fn opsDebug(ops: []const Op) void {
     std.debug.print("\n# Ops\n", .{});
-    for (ops) |item, idx| {
+    for (ops, 0..) |item, idx| {
         std.debug.print("{d:0>2}: {any} {d}\n", .{ idx, item.tag, item.value });
     }
 }
@@ -171,7 +171,7 @@ fn parse(src: []const u8, alloc: Allocator) !Program {
         opsDebug(ops.items);
     }
 
-    return .{ .ops = ops.toOwnedSlice(), .alloc = alloc };
+    return .{ .ops = try ops.toOwnedSlice(), .alloc = alloc };
 }
 
 test "opt2: parse basic 0" {
@@ -255,7 +255,7 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
         const op = ops[pc];
 
         if (TRACE) {
-            var entry = try instruction_count.getOrPut(op.tag);
+            const entry = try instruction_count.getOrPut(op.tag);
             if (entry.found_existing) {
                 entry.value_ptr.* += 1;
             } else {
@@ -266,8 +266,8 @@ fn interpret(program: Program, memory: []u8, rdr: anytype, wtr: anytype, alloc: 
         switch (op.tag) {
             .inc_ptr => dataptr += op.value,
             .dec_ptr => dataptr -= op.value,
-            .inc_data => memory[dataptr] += @intCast(u8, op.value),
-            .dec_data => memory[dataptr] -= @intCast(u8, op.value),
+            .inc_data => memory[dataptr] += @intCast(op.value),
+            .dec_data => memory[dataptr] -= @intCast(op.value),
             .read_stdin => {
                 var i: usize = 0;
                 while (i < op.value) : (i += 1) {
