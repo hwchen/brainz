@@ -1,7 +1,7 @@
 module brainz::opt0;
 import std::io;
 
-fn void! interpret(
+fn void? interpret(
 	Program program,
 	char[] memory,
 	InStream rdr = io::stdin(),
@@ -42,7 +42,7 @@ fn void! interpret(
 
 				if (bracket_nesting != 0) {
 					io::eprintfn("unmatched '[' at pc=%d", saved_pc);
-					return InterpretError.UNMATCHED_LBRACKET?;
+					return UNMATCHED_LBRACKET?;
 				}
 			case ']':
 				// jumps to previous matching ']' if curr data != 0
@@ -65,17 +65,17 @@ fn void! interpret(
 
 				if (bracket_nesting != 0) {
 					io::eprintfn("unmatched ']' at pc=%d", saved_pc);
-					return InterpretError.UNMATCHED_RBRACKET?;
+					return UNMATCHED_RBRACKET?;
 				}
 			default:
-				return InterpretError.UNREACHABLE_CHAR?;
+				return UNREACHABLE_CHAR?;
 		}
 		pc += 1;
 	}
 }
 
-fault InterpretError {
+faultdef
 	UNMATCHED_LBRACKET,
 	UNMATCHED_RBRACKET,
 	UNREACHABLE_CHAR,
-}
+;

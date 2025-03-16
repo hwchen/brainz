@@ -9,13 +9,13 @@ fn int main(String[] args) {
 		io::eprintn("Please provide source path");
 	}
 	String source_path = args[1];
-	char[]! src = file::load_new(source_path);
+	char[]? src = file::load_new(source_path);
 	if (catch err = src) {
 		io::eprintfn("Error reading source file");
 		return 1;
 	}
 
-	Program! program = parse(src);
+	Program? program = parse(src);
 	if (catch err = program) {
 		io::eprintfn("Error parsing program: %s", err);
 		return 1;
@@ -33,12 +33,12 @@ fn int main(String[] args) {
 	return 0;
 }
 
-def Program = char[];
+alias Program = char[];
 
-fn Program! parse(char[] src, Allocator alloc = allocator::heap()) {
+fn Program? parse(char[] src, Allocator alloc = allocator::heap()) {
 	@pool(alloc) {
-		List(<char>) instructions;
-		instructions.temp_init();
+		List{char} instructions;
+		instructions.tinit();
 
 		foreach (c : src) {
 			switch (c) {
@@ -54,6 +54,6 @@ fn Program! parse(char[] src, Allocator alloc = allocator::heap()) {
 				default: {};
 			}
 		}
-		return instructions.to_new_array(alloc);
+		return instructions.to_array(alloc);
 	};
 }
