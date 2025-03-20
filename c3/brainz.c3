@@ -9,7 +9,7 @@ fn int main(String[] args) {
 		io::eprintn("Please provide source path");
 	}
 	String source_path = args[1];
-	char[]? src = file::load_new(source_path);
+	char[]? src = file::load(mem, source_path);
 	if (catch err = src) {
 		io::eprintfn("Error reading source file");
 		return 1;
@@ -36,7 +36,7 @@ fn int main(String[] args) {
 alias Program = char[];
 
 fn Program? parse(char[] src, Allocator alloc = allocator::heap()) {
-	@pool(alloc) {
+	@pool() {
 		List{char} instructions;
 		instructions.tinit();
 
